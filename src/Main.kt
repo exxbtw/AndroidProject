@@ -47,10 +47,10 @@ fun main() = runBlocking {
         Driver("Driver${i + 1}", 19 + i, 19.0 + i * 0.2, "Hyundai Solaris ${i + 1}")
     }
 
-    val jobs = (humans + drivers).map { obj ->
+    val jobs = (humans + drivers).map { obj ->  //map пробегается по каждому эл и возвр новый список
         launch { obj.run() }
     }
-    jobs.forEach { it.join() }
+    jobs.forEach { it.join() } //обход списка
 
 //    val simulationTime = 10
 //
