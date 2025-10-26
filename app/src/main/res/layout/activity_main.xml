@@ -12,49 +12,60 @@
         android:id="@+id/tvTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Главное \nМеню"
+        android:text="\nГлавное \nМеню"
         android:background="#2D2D2D"
         android:textColor="#E8E8E8"
-        android:textSize="52dp"
+        android:textSize="52sp"
         android:textStyle="bold"
         android:gravity="start"
         android:layout_marginBottom="100dp" />
 
     <LinearLayout
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginBottom="20dp">
+        android:weightSum="2">
 
         <Button
             android:id="@+id/bGoToCalculator"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
+            android:layout_width="0dp"
+            android:layout_height="110dp"
+            android:layout_weight="1"
             android:text="Калькулятор"
-            android:textSize="16sp"
+            android:textSize="18sp"
             android:backgroundTint="#3c4849"
             android:textColor="#FFFFFF"
-            android:layout_margin="8dp" />
+            android:layout_margin="2dp" />
 
         <Button
-            android:id="@+id/bButton2"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:text="Soon"
-            android:textSize="16sp"
+            android:id="@+id/bGoToMediaPlayer"
+            android:layout_width="0dp"
+            android:layout_height="110dp"
+            android:layout_weight="1"
+            android:text="Музыка"
+            android:textSize="18sp"
             android:backgroundTint="#3c4849"
             android:textColor="#FFFFFF"
-            android:layout_margin="8dp" />
+            android:layout_margin="2dp" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:weightSum="2">
 
         <Button
             android:id="@+id/bButton3"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:text="Soon"
-            android:textSize="16sp"
+            android:layout_width="0dp"
+            android:layout_height="110dp"
+            android:layout_weight="2"
+            android:text="Пока нету"
+            android:textSize="18sp"
             android:backgroundTint="#3c4849"
             android:textColor="#FFFFFF"
-            android:layout_margin="8dp" />
+            android:layout_margin="2dp" />
 
     </LinearLayout>
 
