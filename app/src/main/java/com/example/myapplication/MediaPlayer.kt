@@ -11,10 +11,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import android.graphics.Color
-import java.io.File
-import android.content.ContentUris
 import android.net.Uri
-import android.provider.MediaStore
+import java.io.File
 
 class MediaPlayerActivity : AppCompatActivity() {
 
@@ -183,31 +181,24 @@ class MediaPlayerActivity : AppCompatActivity() {
     private fun loadMusicFromStorage() {
         musicList.clear()
 
-        contentResolver.query(
-            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-            arrayOf(MediaStore.Audio.Media._ID, MediaStore.Audio.Media.DISPLAY_NAME, MediaStore.Audio.Media.DATA),
-            "${MediaStore.Audio.Media.IS_MUSIC} != 0", null, null
-        )?.use { cursor ->
-            val idIndex = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
-            val nameIndex = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DISPLAY_NAME)
-            val dataIndex = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA)
+        val musicDir = File(Environment.getExternalStorageDirectory(), "Music")
 
-            while (cursor.moveToNext()) {
-                val path = cursor.getString(dataIndex)
-                if (path?.contains("/Music/") == true) {
-                    val uri = ContentUris.withAppendedId(
-                        MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                        cursor.getLong(idIndex)
-                    )
-                    musicList.add(cursor.getString(nameIndex) to uri)
+        if (musicDir.exists() && musicDir.isDirectory) {
+            musicDir.listFiles()?.forEach { file ->
+                if (file.isFile && file.name.endsWith(".mp3", true)) {
+                    val uri = Uri.fromFile(file)
+                    musicList.add(file.nameWithoutExtension to uri)
                 }
             }
         }
-
-        if (musicList.isEmpty()) {
-            Toast.makeText(this, "Музыка не найдена", Toast.LENGTH_LONG).show()
-        }
     }
+
+
+//    override fun onResume() {
+//        super.onResume()
+//        if (mediaPlayer.)
+//            mediaPlayer.start()
+//    }
 
     override fun onPause() {
         super.onPause()
@@ -216,3 +207,7 @@ class MediaPlayerActivity : AppCompatActivity() {
         }
     }
 }
+//надо добавить флаг чтобы в фоне играло, все таки это плеер
+//длительность трека в секундах отобразить
+
+//сортировка треков(одним из методов)
