@@ -19,17 +19,23 @@ class MediaPlayerActivity : AppCompatActivity() {
     private lateinit var mediaPlayer: MediaPlayer
     private lateinit var seekBar: SeekBar
     private lateinit var tvCurrentTrack: TextView
-
+    private lateinit var tvCurrentTime: TextView
+    private lateinit var Duration: TextView
+    private lateinit var playPauseButton: Button
 
     private val handler = Handler(Looper.getMainLooper())
     private val log_tag = "MusicPlayer"
     private val musicList = mutableListOf<Pair<String, Uri>>()
     private var currentTrackIndex = 0
+    private var firstLaunch = true
+
 
 
     private val updateRunnable = object : Runnable {
         override fun run() {
             seekBar.progress = mediaPlayer.currentPosition
+            val currentSeconds = mediaPlayer.currentPosition / 1000
+            tvCurrentTime.text = String.format("%d:%02d", currentSeconds / 60, currentSeconds % 60)
             handler.postDelayed(this, 500)
         }
     }
@@ -65,62 +71,78 @@ class MediaPlayerActivity : AppCompatActivity() {
                 currentTrackIndex = (currentTrackIndex + 1) % musicList.size
                 playTrack(currentTrackIndex)
             }
+            playPauseButton.text = "Play"
+            playPauseButton.setBackgroundColor(Color.parseColor("#B0C4DE"))
         }
 
-        val playButton: Button = findViewById(R.id.btnPlay)
-        val pauseButton: Button = findViewById(R.id.btnPause)
+        playPauseButton = findViewById(R.id.btnPlayPause)
         val nextButton: Button = findViewById(R.id.btnNext)
         val prevButton: Button = findViewById(R.id.btnPrev)
+        tvCurrentTime = findViewById(R.id.tvCurrentTime)
+        Duration = findViewById(R.id.Duration)
+        val shuffleButton: Button = findViewById(R.id.btnShuffle)
+        val sortButton: Button = findViewById(R.id.btnSort)
 
-        val listTracks: ListView = findViewById(R.id.listTracks)
-        val btnTrackList: Button = findViewById(R.id.btnTrackList)
-
-        val adapter = ArrayAdapter<String>(
-            this, android.R.layout.simple_list_item_1, mutableListOf())
-        listTracks.adapter = adapter
-
-        btnTrackList.setOnClickListener {
+        sortButton.setOnClickListener {
             if (musicList.isEmpty()) {
-                Toast.makeText(this, "Музыка не найдена", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Нет треков для сортировки", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-            if (listTracks.visibility == ListView.GONE) {
-                adapter.clear()
-                adapter.addAll(musicList.map { it.first.substringBeforeLast('.') })
-                adapter.notifyDataSetChanged()
-                listTracks.visibility = ListView.VISIBLE
-                btnTrackList.text = "Скрыть список"
+
+            musicList.sortBy { it.first.lowercase() }
+            currentTrackIndex = 0
+            playTrack(currentTrackIndex)
+            Toast.makeText(this, "Отсортировано", Toast.LENGTH_SHORT).show()
+        }
+
+        shuffleButton.setOnClickListener {
+            if (musicList.isNotEmpty()) {
+                musicList.shuffle()
+                currentTrackIndex = 0
+                playTrack(currentTrackIndex)
+                Toast.makeText(this, "Треки перемешаны", Toast.LENGTH_SHORT).show()
             } else {
-                listTracks.visibility = ListView.GONE
-                btnTrackList.text = "Список треков"
+                Toast.makeText(this, "Нет доступных треков", Toast.LENGTH_SHORT).show()
             }
+        }
+
+        val listTracks: ListView = findViewById(R.id.listTracks)
+
+        val adapter = ArrayAdapter<String>(
+            this, android.R.layout.simple_list_item_1, mutableListOf()
+        )
+        listTracks.adapter = adapter
+        loadMusicFromStorage()
+        if (musicList.isNotEmpty()) {
+            adapter.clear()
+            adapter.addAll(musicList.map { it.first })
+            adapter.notifyDataSetChanged()
         }
         listTracks.setOnItemClickListener { _, _, position, _ ->
             currentTrackIndex = position
             playTrack(position)
-            listTracks.visibility = ListView.GONE
-            btnTrackList.text = "Список треков"
         }
 
 
-        playButton.setOnClickListener {
-            if (!mediaPlayer.isPlaying) {
-                if (mediaPlayer.currentPosition == 0 && musicList.isNotEmpty()) {
-                    playTrack(currentTrackIndex)
+        playPauseButton.setOnClickListener {
+            if (mediaPlayer.isPlaying) {
+                mediaPlayer.pause()
+                playPauseButton.text = "Paused"
+                playPauseButton.setBackgroundColor(Color.parseColor("#B0C4DE"))
+            } else {
+                if (musicList.isNotEmpty()) {
+                    if (mediaPlayer.currentPosition == 0) {
+                        playTrack(currentTrackIndex)
+                    } else {
+                        mediaPlayer.start()
+                    }
+                    playPauseButton.text = "Playing"
+                    playPauseButton.setBackgroundColor(Color.parseColor("#73AFF0"))
                 } else {
-                    mediaPlayer.start()
+                    Toast.makeText(this, "Нет доступных треков", Toast.LENGTH_SHORT).show()
                 }
-                playButton.setBackgroundColor(Color.parseColor("#73AFF0"))
-                pauseButton.setBackgroundColor(Color.parseColor("#B0C4DE"))
             }
         }
-
-        pauseButton.setOnClickListener {
-            mediaPlayer.pause()
-            pauseButton.setBackgroundColor(Color.parseColor("#73AFF0"))
-            playButton.setBackgroundColor(Color.parseColor("#B0C4DE"))
-        }
-
         nextButton.setOnClickListener {
             if (musicList.isNotEmpty()) {
                 currentTrackIndex = (currentTrackIndex + 1) % musicList.size
@@ -137,19 +159,12 @@ class MediaPlayerActivity : AppCompatActivity() {
 
         seekBar = findViewById(R.id.seekBar)
 
-        seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(sb: SeekBar?, progress: Int, fromUser: Boolean) {
-                if (fromUser) mediaPlayer.seekTo(progress)
-            }
-            override fun onStartTrackingTouch(sb: SeekBar?) {}
-            override fun onStopTrackingTouch(sb: SeekBar?) {}
-        })
 
         requestPermissionLauncher.launch(
-            arrayOf(
-                Manifest.permission.READ_MEDIA_AUDIO
-            )
+            arrayOf(Manifest.permission.READ_MEDIA_AUDIO)
         )
+
+        loadMusicFromStorage()
 
         tvCurrentTrack = findViewById(R.id.CurrentTrack)
 
@@ -169,6 +184,12 @@ class MediaPlayerActivity : AppCompatActivity() {
             mediaPlayer.reset()
             mediaPlayer.setDataSource(this, track.second)
             mediaPlayer.prepare()
+
+            val totalSeconds = mediaPlayer.duration / 1000
+            Duration.text = String.format("%d:%02d", totalSeconds / 60, totalSeconds % 60, totalSeconds)
+            val current = mediaPlayer.currentPosition / 1000
+            tvCurrentTime.text = String.format("%d:%02d", current / 60, current % 60)
+
             mediaPlayer.start()
             tvCurrentTrack.text = track.first.substringBeforeLast('.')
             seekBar.max = mediaPlayer.duration
@@ -193,12 +214,13 @@ class MediaPlayerActivity : AppCompatActivity() {
         }
     }
 
-
-//    override fun onResume() {
-//        super.onResume()
-//        if (mediaPlayer.)
-//            mediaPlayer.start()
-//    }
+    override fun onResume() {
+        super.onResume()
+        if (!firstLaunch && !mediaPlayer.isPlaying && currentTrackIndex >= 0) {
+            mediaPlayer.start()
+        }
+        firstLaunch = false
+    }
 
     override fun onPause() {
         super.onPause()
@@ -207,7 +229,3 @@ class MediaPlayerActivity : AppCompatActivity() {
         }
     }
 }
-//надо добавить флаг чтобы в фоне играло, все таки это плеер
-//длительность трека в секундах отобразить
-
-//сортировка треков(одним из методов)
