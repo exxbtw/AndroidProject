@@ -71,8 +71,6 @@ class MediaPlayerActivity : AppCompatActivity() {
                 currentTrackIndex = (currentTrackIndex + 1) % musicList.size
                 playTrack(currentTrackIndex)
             }
-            playPauseButton.text = "Play"
-            playPauseButton.setBackgroundColor(Color.parseColor("#B0C4DE"))
         }
 
         playPauseButton = findViewById(R.id.btnPlayPause)
@@ -182,13 +180,11 @@ class MediaPlayerActivity : AppCompatActivity() {
 
         try {
             mediaPlayer.reset()
-            mediaPlayer.setDataSource(this, track.second)
+            mediaPlayer.setDataSource(this, track.second) //2 - URI
             mediaPlayer.prepare()
 
             val totalSeconds = mediaPlayer.duration / 1000
             Duration.text = String.format("%d:%02d", totalSeconds / 60, totalSeconds % 60, totalSeconds)
-            val current = mediaPlayer.currentPosition / 1000
-            tvCurrentTime.text = String.format("%d:%02d", current / 60, current % 60)
 
             mediaPlayer.start()
             tvCurrentTrack.text = track.first.substringBeforeLast('.')
