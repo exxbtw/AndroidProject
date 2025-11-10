@@ -80,6 +80,28 @@ class MediaPlayerActivity : AppCompatActivity() {
         Duration = findViewById(R.id.Duration)
         val shuffleButton: Button = findViewById(R.id.btnShuffle)
         val sortButton: Button = findViewById(R.id.btnSort)
+        val volumeSeekBar: SeekBar = findViewById(R.id.volumeSeekBar)
+        val audioManager = getSystemService(AUDIO_SERVICE) as android.media.AudioManager
+        val maxVolume = audioManager.getStreamMaxVolume(android.media.AudioManager.STREAM_MUSIC)
+        val currentVolume = audioManager.getStreamVolume(android.media.AudioManager.STREAM_MUSIC)
+
+
+        volumeSeekBar.max = maxVolume
+        volumeSeekBar.progress = currentVolume
+        volumeSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                if (fromUser) {
+                    audioManager.setStreamVolume(
+                        android.media.AudioManager.STREAM_MUSIC,
+                        progress,
+                        0
+                    )
+                }
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
+
 
         sortButton.setOnClickListener {
             if (musicList.isEmpty()) {
@@ -156,6 +178,14 @@ class MediaPlayerActivity : AppCompatActivity() {
         }
 
         seekBar = findViewById(R.id.seekBar)
+
+        seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(sb: SeekBar?, progress: Int, fromUser: Boolean) {
+                if (fromUser) mediaPlayer.seekTo(progress)
+            }
+            override fun onStartTrackingTouch(sb: SeekBar?) {}
+            override fun onStopTrackingTouch(sb: SeekBar?) {}
+        })
 
 
         requestPermissionLauncher.launch(
