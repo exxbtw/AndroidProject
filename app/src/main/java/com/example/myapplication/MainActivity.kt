@@ -22,5 +22,10 @@ class MainActivity : AppCompatActivity() {
             val intent = Intent(this, MediaPlayerActivity::class.java)
             startActivity(intent)
         }
+        val bGoToLocation: Button = findViewById(R.id.bGoToLocation)
+        bGoToLocation.setOnClickListener {
+            val intent = Intent(this, LocationActivity::class.java)
+            startActivity(intent)
+        }
     }
 }

@@ -3,6 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
 
     <application
@@ -19,6 +21,9 @@
             android:exported="false" />
         <activity
             android:name=".CalculatorActivity"
+            android:exported="false" />
+        <activity
+            android:name=".LocationActivity"
             android:exported="false" />
         <activity
             android:name=".MainActivity"
