@@ -60,12 +60,24 @@
             android:id="@+id/bGoToLocation"
             android:layout_width="0dp"
             android:layout_height="110dp"
-            android:layout_weight="2"
+            android:layout_weight="1"
             android:text="Локации"
             android:textSize="18sp"
             android:backgroundTint="#3c4849"
             android:textColor="#FFFFFF"
             android:layout_margin="2dp" />
+
+        <Button
+            android:id="@+id/bGoToSockets"
+            android:layout_width="0dp"
+            android:layout_height="110dp"
+            android:layout_weight="1"
+            android:text="Сокеты"
+            android:textSize="18sp"
+            android:backgroundTint="#3c4849"
+            android:textColor="#FFFFFF"
+            android:layout_margin="2dp" />
+
 
     </LinearLayout>
 
