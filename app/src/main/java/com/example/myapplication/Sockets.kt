@@ -48,7 +48,7 @@ class Sockets : AppCompatActivity() {
         val context = ZContext()
         val socket = context.createSocket(SocketType.REQ)
 
-        socket.connect("tcp://192.168.1.104:5566")
+        socket.connect("tcp://10.36.114.129:5566")
 
         val request = "Hello from Android!"
         Log.d(logTag, "Send: $request")

@@ -80,6 +80,7 @@ class LocationActivity : AppCompatActivity() {
         super.onResume()
         startLocationUpdates()
 
+
         bBackToMain.setOnClickListener({
             val backToMain = Intent(this, MainActivity::class.java)
             startActivity(backToMain)

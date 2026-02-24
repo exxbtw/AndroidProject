@@ -33,6 +33,11 @@
         <activity
             android:name="com.example.myapplication.activities.Sockets"
             android:exported="false" />
+
+        <activity
+            android:name="com.example.myapplication.activities.Location2"
+            android:exported="false" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true">

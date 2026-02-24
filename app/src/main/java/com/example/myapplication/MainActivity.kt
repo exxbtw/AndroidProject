@@ -32,5 +32,10 @@ class MainActivity : AppCompatActivity() {
             val intent = Intent(this, com.example.myapplication.activities.Sockets::class.java)
             startActivity(intent)
         }
+        val bGoToLocation2: Button = findViewById(R.id.bGoToLocation2)
+        bGoToLocation2.setOnClickListener {
+            val intent = Intent(this, com.example.myapplication.activities.Location2::class.java)
+            startActivity(intent)
+        }
     }
 }

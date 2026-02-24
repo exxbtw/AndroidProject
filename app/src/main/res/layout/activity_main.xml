@@ -61,7 +61,7 @@
             android:layout_width="0dp"
             android:layout_height="110dp"
             android:layout_weight="1"
-            android:text="Локации"
+            android:text="Локации(OLD)"
             android:textSize="18sp"
             android:backgroundTint="#3c4849"
             android:textColor="#FFFFFF"
@@ -72,7 +72,7 @@
             android:layout_width="0dp"
             android:layout_height="110dp"
             android:layout_weight="1"
-            android:text="Сокеты"
+            android:text="Сокеты(OLD)"
             android:textSize="18sp"
             android:backgroundTint="#3c4849"
             android:textColor="#FFFFFF"
@@ -80,5 +80,25 @@
 
 
     </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:weightSum="2">
+
+        <Button
+            android:id="@+id/bGoToLocation2"
+            android:layout_width="0dp"
+            android:layout_height="110dp"
+            android:layout_weight="2"
+            android:text="Локации V2"
+            android:textSize="18sp"
+            android:backgroundTint="#3c4849"
+            android:textColor="#FFFFFF"
+            android:layout_margin="2dp" />
+
+    </LinearLayout>
+
 
 </LinearLayout>
