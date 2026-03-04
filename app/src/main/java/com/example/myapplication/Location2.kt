@@ -21,6 +21,9 @@ import org.zeromq.ZMQ
 import android.location.LocationListener
 import android.location.LocationManager
 import android.content.Context
+import com.example.myapplication.service.TelephonyService
+import android.content.Intent
+import android.os.Build
 
 class Location2 : AppCompatActivity(), LocationListener {
 
@@ -50,12 +53,19 @@ class Location2 : AppCompatActivity(), LocationListener {
         tvLon = findViewById(R.id.tv_lon)
         tvAlt = findViewById(R.id.tv_alt)
 
+
         locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
         requestLocationPermission()
 
         findViewById<Button>(R.id.back_to_main).setOnClickListener {
             finish()
+        }
+        val intent = Intent(this, TelephonyService::class.java)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent)
+        } else {
+            startService(intent)
         }
     }
 
@@ -122,11 +132,6 @@ class Location2 : AppCompatActivity(), LocationListener {
 
     override fun onLocationChanged(location: Location) {
         updateUI(location)
-
-        Thread {
-            sendToZmq(location.latitude, location.longitude,
-                if (location.hasAltitude()) location.altitude else 0.0)
-        }.start()
     }
 
     private fun updateUI(location: Location) {
@@ -155,56 +160,6 @@ class Location2 : AppCompatActivity(), LocationListener {
 //        json.put("time", System.currentTimeMillis())
 //
 //    }
-
-    private fun sendToZmq(lat: Double, lon: Double, alt: Double) {
-
-        val maxAttempts = 5
-        var attempt = 0
-
-        while (attempt < maxAttempts) {
-
-            val context = ZContext()
-            val socket = context.createSocket(SocketType.REQ)
-
-            try {
-
-                socket.receiveTimeOut = 3000
-                socket.sendTimeOut = 3000
-
-                socket.connect("tcp://10.36.114.129:5566")
-
-                val json = JSONObject()
-                json.put("latitude", lat)
-                json.put("longitude", lon)
-                json.put("altitude", alt)
-                json.put("time", System.currentTimeMillis())
-
-                socket.send(json.toString())
-
-                val reply = socket.recvStr()
-
-                if (reply != null) {
-                    handler.post {
-                        Toast.makeText(this, "Server: $reply", Toast.LENGTH_LONG).show()
-                    }
-                    socket.close()
-                    context.close()
-                    return
-                }
-
-            } catch (e: Exception) {
-                attempt++
-                Thread.sleep(2000)
-            } finally {
-                socket.close()
-                context.close()
-            }
-        }
-
-//        handler.post {
-//            Toast.makeText(this, "Server unavailable", Toast.LENGTH_LONG).show()
-//        }
-    }
 
     override fun onDestroy() {
         super.onDestroy()
