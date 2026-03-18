@@ -14,6 +14,8 @@ import org.json.JSONArray
 import org.json.JSONObject
 import org.zeromq.SocketType
 import org.zeromq.ZContext
+import java.io.File
+import java.io.FileOutputStream
 import java.util.concurrent.Executors
 
 class TelephonyService : Service(), LocationListener {
@@ -26,7 +28,9 @@ class TelephonyService : Service(), LocationListener {
     private lateinit var socket: org.zeromq.ZMQ.Socket
 
     private val CHANNEL_ID = "TelephonyServiceChannel"
-    private val SERVER_URL = "tcp://10.214.164.27:5566"
+    private val SERVER_URL = "tcp://10.64.11.27:5566"
+
+    private val LOG_FILE_NAME = "location_log.json"
 
     override fun onCreate() {
         super.onCreate()
@@ -35,17 +39,17 @@ class TelephonyService : Service(), LocationListener {
 
         zContext = ZContext()
         socket = zContext.createSocket(SocketType.REQ)
-        socket.receiveTimeOut = 3000
-        socket.sendTimeOut = 3000
+        socket.receiveTimeOut = 2000
+        socket.sendTimeOut = 2000
         socket.connect(SERVER_URL)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         createNotificationChannel()
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Telephony Service")
-            .setContentText("Sending GPS + Cell Info...")
-            .setSmallIcon(android.R.drawable.ic_menu_mylocation)
+            .setContentTitle("Data Collector Active")
+            .setContentText("Recording GPS + Cell Info to file...")
+            .setSmallIcon(android.R.drawable.ic_menu_save)
             .build()
         startForeground(1, notification)
 
@@ -77,44 +81,94 @@ class TelephonyService : Service(), LocationListener {
                     val cellObject = JSONObject()
                     when (info) {
                         is CellInfoLte -> {
+                            val id = info.cellIdentity
+                            val sig = info.cellSignalStrength
+
                             cellObject.put("type", "LTE")
-                            cellObject.put("pci", info.cellIdentity.pci)
-                            cellObject.put("earfcn", info.cellIdentity.earfcn)
-                            cellObject.put("tac", info.cellIdentity.tac)
-                            cellObject.put("rsrp", info.cellSignalStrength.rsrp)
-                            cellObject.put("rsrq", info.cellSignalStrength.rsrq)
-                            cellObject.put("rssi", info.cellSignalStrength.rssi)
-                            cellObject.put("ta", info.cellSignalStrength.timingAdvance)
+
+                            cellObject.put("pci", id.pci)
+                            cellObject.put("earfcn", id.earfcn)
+                            cellObject.put("tac", id.tac)
+                            cellObject.put("mcc", id.mccString?.toIntOrNull() ?: 0)
+                            cellObject.put("mnc", id.mncString?.toIntOrNull() ?: 0)
+                            cellObject.put("band", if (Build.VERSION.SDK_INT >= 29) id.bandwidth else 0)
+
+                            cellObject.put("rsrp", sig.rsrp)
+                            cellObject.put("rsrq", sig.rsrq)
+                            cellObject.put("rssi", sig.rssi)
+                            cellObject.put("rssnr", sig.rssnr)
+                            cellObject.put("cqi", sig.cqi)
+                            cellObject.put("asu", sig.asuLevel)
+                            cellObject.put("ta", sig.timingAdvance)
                         }
                         is CellInfoGsm -> {
+                            val id = info.cellIdentity
+                            val sig = info.cellSignalStrength
+
                             cellObject.put("type", "GSM")
-                            cellObject.put("lac", info.cellIdentity.lac)
-                            cellObject.put("cid", info.cellIdentity.cid)
-                            cellObject.put("dbm", info.cellSignalStrength.dbm)
-                            cellObject.put("ta", info.cellSignalStrength.timingAdvance)
+
+                            cellObject.put("lac", id.lac)
+                            cellObject.put("cid", id.cid)
+                            cellObject.put("arfcn", id.arfcn)
+                            cellObject.put("bsic", id.bsic)
+                            cellObject.put("psc", id.psc)
+
+                            cellObject.put("mcc", id.mccString?.toIntOrNull() ?: 0)
+                            cellObject.put("mnc", id.mncString?.toIntOrNull() ?: 0)
+
+                            cellObject.put("rssi", sig.dbm)
+                            cellObject.put("asu", sig.asuLevel)
+                            cellObject.put("ta", sig.timingAdvance)
                         }
                         is CellInfoNr -> {
                             val id = info.cellIdentity as CellIdentityNr
+                            val sig = info.cellSignalStrength as CellSignalStrengthNr
+
                             cellObject.put("type", "NR")
+
                             cellObject.put("pci", id.pci)
                             cellObject.put("tac", id.tac)
                             cellObject.put("nci", id.nci)
+                            cellObject.put("nrarfcn", id.nrarfcn)
+
+                            cellObject.put("mcc", id.mccString?.toIntOrNull() ?: 0)
+                            cellObject.put("mnc", id.mncString?.toIntOrNull() ?: 0)
+
+                            cellObject.put("ss_rsrp", sig.ssRsrp)
+                            cellObject.put("ss_rsrq", sig.ssRsrq)
+                            cellObject.put("ss_sinr", sig.ssSinr)
+                            cellObject.put("asu", sig.asuLevel)
+
                         }
                     }
                     cellArray.put(cellObject)
                 }
-            } catch (e: SecurityException) {
-                e.printStackTrace()
-            }
+            } catch (e: SecurityException) { e.printStackTrace() }
 
             json.put("cell_info", cellArray)
 
+            val dataString = json.toString()
+
+            saveLocally(dataString)
+
             try {
-                socket.send(json.toString())
+                socket.send(dataString)
                 socket.recvStr()
             } catch (e: Exception) {
-                e.printStackTrace()
             }
+        }
+    }
+
+    private fun saveLocally(data: String) {
+        try {
+            val folder = getExternalFilesDir(null)
+            val file = File(folder, LOG_FILE_NAME)
+
+            FileOutputStream(file, true).use { stream ->
+                stream.write((data + "\n").toByteArray())
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
@@ -123,7 +177,7 @@ class TelephonyService : Service(), LocationListener {
             val serviceChannel = NotificationChannel(
                 CHANNEL_ID,
                 "Foreground Service Channel",
-                NotificationManager.IMPORTANCE_DEFAULT
+                NotificationManager.IMPORTANCE_LOW
             )
             val manager = getSystemService(NotificationManager::class.java)
             manager.createNotificationChannel(serviceChannel)

@@ -149,17 +149,9 @@ class Location2 : AppCompatActivity(), LocationListener {
         }
 
 
-//        saveToJSON(location)
     }
 
-//    private fun saveToJSON(location: Location) {
-//        val json = JSONObject()
-//        json.put("latitude", location.latitude)
-//        json.put("longitude", location.longitude)
-//        json.put("altitude", if (location.hasAltitude()) location.altitude else 0.0)
-//        json.put("time", System.currentTimeMillis())
-//
-//    }
+
 
     override fun onDestroy() {
         super.onDestroy()
